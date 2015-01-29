@@ -1,0 +1,114 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1343\cocoasubrtf140
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red255\green39\blue18;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\f0\b\fs28 \cf0 Sort and remove duplicate from cvs\
+
+\fs24 \
+
+\b0 sort -u user.csv -o user.csv\
+sort -u seller.csv -o seller.csv\
+sort -u item.csv -o item.csv\
+sort -u cate.csv -o cate.csv\
+sort -u bid.csv -o bid.csv\
+\
+===========================================================================
+\b\fs28 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+Drop Table\
+
+\b0\fs24 \
+drop table Bid;\
+drop table Category;\
+drop table Item;\
+drop table Seller;\
+drop table User;\
+\
+===========================================================================\
+\
+
+\b\fs28 Create Table
+\b0\fs24 \
+\
+create table User (ID varchar(60) not null, Rating integer not null, Location varchar(60), Country varchar(60), primary key (ID));\
+\
+create table Seller (ID varchar(60) not null, Rating integer not null, primary key(ID, Rating));\
+\
+create table Item (ID integer not null, Name varchar(300) not null, Currently decimal(8,2) not null, Buy_price decimal(8,2) default null, First_bid decimal(8,2) not null, Number_bids integer, Latitude decimal(9,6) default null, Longitude decimal(9,6) default null, Location varchar(60), Country varchar(60), Start timestamp not null, End timestamp not null, SellerID varchar(60) not null, Description varchar(4000), primary key(ID), \cf2 foreign key(SellerID) references Seller(ID)\cf0 );  \
+\
+create table Category (ItemID integer not null, Category varchar(100) not null, primary key(ItemID, Category), foreign key(ItemID) references Item(ID));\
+\
+create table Bid (UserID varchar(60) not null, ItemID integer not null, Amount decimal(8,2) not null, Time timestamp not null, primary key(UserID, Time), foreign key(UserID) references User(ID), foreign key(ItemID) references Item(ID));\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 \
+===========================================================================\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b\fs28 \cf0 Load Table
+\b0\fs24 \
+\
+load data local infile \'91~/shared/project2/src/user.csv\'92 into table User fields terminated by \'91 || \'91;\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+\cf0 load data local infile \'91~/shared/project2/src/seller.csv\'92 into table Seller fields terminated by \'91 || \'91;\
+\
+load data local infile \'91~/shared/project2/src/item.csv\'92 into table Item fields terminated by \'91 || \'91;\
+\
+load data local infile \'91~/shared/project2/src/cate.csv\'92 into table Category fields terminated by \'91 || \'91;\
+\
+load data local infile \'91~/shared/project2/src/bid.csv\'92 into table Bid fields terminated by \'91 || \'91;\
+\
+===========================================================================\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural
+
+\b\fs28 \cf0 Test Cases
+\fs24 \
+
+\b0 \
+1. Find the number of users in the database\
+select count(*) from (select ID from User union select ID from Seller) a;\
+
+\i count(*) = 13422\
+\
+
+\i0 2. Find the number of items in \'93New York\'94\
+select count(*) from Item where Location = \'91New York\'92 collate utf8_bin;\
+OR\
+select count(*) from Item where Binary Location = \'91New York\'92;\
+
+\i count(*) = 103\
+\
+
+\i0 3. Find the number of auctions belonging to exactly four categories\
+select count(*) from (select ItemID from Category group by ItemID having count(*)=4) a;\
+
+\i count(*) = 8365
+\i0 \
+\
+4. Find the current auction with highest bid\
+select ID from Item where ID = (select ID from Item where Number_bids > 0 order by Currently desc limit 1) and End > \'912001-12-20 00:00:01\'92;\
+
+\i ID = 1046740686
+\i0 \
+\
+5. Find the number of sellers whose rating is higher than 1000.\
+select count(*) from Seller where Rating > 1000\
+
+\i count(*) = 3130
+\i0 \
+\
+6. Find the number of users who are both sellers and bidders\
+select count(*) from User inner join Seller on User.ID = Seller.ID;\
+
+\i count(*) = 6717\
+\
+
+\i0 7. Find the number of categories that include at least one item with a bid of more than $100.\
+select count(distinct Category) from Category where ItemID in (select ID from Item where Currently > 100 and Number_bids > 0);\
+
+\i count(distinct Category) = 150}
