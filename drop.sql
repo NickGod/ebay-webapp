@@ -1,5 +1,5 @@
-drop table Bid;
-drop table Category;
-drop table Item;
-drop table Seller;
-drop table User;
+drop table if exists Bid;
+drop table if exists Category;
+drop table if exists Item;
+drop table if exists Seller;
+drop table if exists User;
